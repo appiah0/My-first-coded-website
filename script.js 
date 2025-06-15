@@ -1,0 +1,190 @@
+//==== Mobile Navigation ====
+document.addEventListener('DOMContentLoaded', function() {
+    const hamburger = document.getElementById('hamburger');
+    const navLinks = document.getElementById('navLinks');
+    const navItems = document.querySelectorAll('.nav-links li');
+
+    // Toggle mobile menu
+    hamburger.addEventListener('click', () => {
+        hamburger.classList.toggle('active');
+        navLinks.classList.toggle('active');
+        document.body.style.overflow = navLinks.classList.contains('active') ? 'hidden' : 'auto';
+    });
+
+    // Close menu when clicking links
+    navItems.forEach(item => {
+        item.addEventListener('click', () => {
+            hamburger.classList.remove('active');
+            navLinks.classList.remove('active');
+            document.body.style.overflow = 'auto';
+        });
+    });
+
+    // Close menu when clicking outside
+    document.addEventListener('click', (e) => {
+        if (!navLinks.contains(e.target) && !hamburger.contains(e.target)) {
+            navLinks.classList.remove('active');
+            hamburger.classList.remove('active');
+            document.body.style.overflow = 'auto';
+        }
+    });
+
+    // ==== Smooth Scrolling ====
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function(e) {
+            e.preventDefault();
+            const targetId = this.getAttribute('href');
+            const targetElement = document.querySelector(targetId);
+
+            if (targetElement) {
+                window.scrollTo({
+                    top: targetElement.offsetTop - 80,
+                    behavior: 'smooth'
+                });
+
+                // Close mobile menu if open
+                if (navLinks.classList.contains('active')) {
+                    hamburger.classList.remove('active');
+                    navLinks.classList.remove('active');
+                    document.body.style.overflow = 'auto';
+                }
+            }
+        });
+    });
+
+    // ==== FAQ Accordion ====
+    const faqQuestions = document.querySelectorAll('.faq-question');
+
+    faqQuestions.forEach(question => {
+        question.addEventListener('click', () => {
+            const answer = question.nextElementSibling;
+            const isActive = question.classList.contains('active');
+
+            // Close all other answers
+            faqQuestions.forEach(q => {
+                if (q != question) {
+                    q.classList.remove('active');
+                    q.nextElementSibling.classList.remove('active');
+                }
+            });
+
+            // Toggle current answer
+            question.classList.toggle('active');
+            answer.classList.toggle('active');
+        });
+    });
+
+    // ==== Desktop Mode Fixes ====
+    window.addEventListener('resize', function() {
+        if (window.innerWidth >= 768) {
+            document.body.style.zoom = "1";
+            document.documentElement.style.zoom = "1";
+        }
+    });
+
+    // Detect fake mobile view
+    function checkViewport() {
+        const isDesktopMode = window.innerWidth > 768 && navigator.userAgent.match(/Mobile/i);
+        if (isDesktopMode) {
+            document.body.classList.add('desktop-mode');
+            document.documentElement.style.zoom = "1";
+        }
+    }
+    checkViewport();
+
+    // ==== LOAD STABILITY + ZOOM FIXES ====
+    // 1. Prevent layout shift
+    const elements = document.querySelectorAll('.hidden-until-load');
+    elements.forEach(el => {
+        el.classList.remove('hidden-until-load');
+        el.classList.add('visible-after-load');
+    });
+
+    // 2. CLS prevention
+    const unstableElements = document.querySelectorAll('[data-cls-fix]');
+    unstableElements.forEach(el => {
+        el.style.visibility = 'visible';
+    });
+
+    // 3. Resize stabilizer
+    let resizeTimer;
+    window.addEventListener('resize', function() {
+        document.body.classList.add('resize-animation-stopper');
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(() => {
+            document.body.classList.remove('resize-animation-stopper');
+        }, 400);
+    });
+
+    // ==== Contract Address Copy Functionality ====
+    const contractAddress = document.getElementById('contractAddress');
+    const copyButton = document.getElementById('copyButton');
+
+    if (copyButton) {
+        copyButton.addEventListener('click', () => {
+            navigator.clipboard.writeText(contractAddress.textContent.trim())
+                .then(() => {
+                    // Show copied tooltip
+                    copyButton.classList.add('show-tooltip');
+
+                    // Change button text temporarily
+                    const originalText = copyButton.innerHTML;
+                    copyButton.innerHTML = '<i class="fas fa-check"></i> Copied!';
+
+                    // Reset after 2 seconds
+                    setTimeout(() => {
+                        copyButton.classList.remove('show-tooltip');
+                        copyButton.innerHTML = originalText;
+                    }, 2000);
+                })
+                .catch(err => {
+                    console.error('Failed to copy: ', err);
+                    copyButton.innerHTML = '<i class="fas fa-times"></i> Error';
+                    setTimeout(() => {
+                        copyButton.innerHTML = '<i class="far fa-copy"></i> Copy';
+                    }, 2000);
+                });
+        });
+    }
+
+    //==== Intersection Observer for Scroll Animations ====
+    const observerOptions = {
+        threshold: 0.1,
+        rootMargin: '0px 0px -50px 0px'
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('in-view');
+                observer.unobserve(entry.target);
+            }
+        });
+    }, observerOptions);
+
+    // Observe all sections with animations
+    document.querySelectorAll('.logo-section, .video-wrapper, .about, .tokenomics, .contract, .buy, .faq, .disclaimer, .logo-text-section').forEach(section => {
+        observer.observe(section);
+    });
+
+    //==== Ultimate Viewport Stabilizer ====
+    function stabilizeViewport() {
+        const isMobile = /Mobi|Android/i.test(navigator.userAgent);
+        const isDesktopView = window.innerWidth > 768;
+
+        if (isMobile && isDesktopView) {
+            document.documentElement.style.zoom = "1";
+            document.body.classList.add('force-desktop');
+        }
+    }
+
+    // Run on all critical events
+    ['load', 'resize', 'DOMContentLoaded'].forEach(event => {
+        window.addEventListener(event, stabilizeViewport);
+    });
+
+    // Final CLS prevention
+    window.addEventListener('load', () => {
+        document.body.style.visibility = 'visible';
+    });
+});
