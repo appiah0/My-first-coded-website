@@ -447,7 +447,7 @@ nav {
     padding: 1.5rem;
     background: rgba(0, 0, 0, 0.3);
     border-radius: 10px;
-    border-left: 0.3rem solid var(--dim-yellow);
+    border-left: 3px solid var(--dim-yellow);
     transition: var(--transition-medium);
     text-align: left;
     font-size: 1rem;
